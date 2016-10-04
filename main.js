@@ -1,12 +1,15 @@
+// setup renderer
+
 var renderer = new THREE.WebGLRenderer({
   alpha: true,
-  // depth: false,
 });
 renderer.setClearColor(0xffffff, 0);
 renderer.autoClear = false;
 renderer.sortObjects = false;
 
 document.body.appendChild(renderer.domElement);
+
+// setup render target params
 
 var rtp = {
   minFilter: THREE.LinearFilter,
@@ -17,7 +20,7 @@ var rtp = {
 var w = window.innerWidth;
 var h = window.innerHeight;
 
-
+// setup content that will form the trail
 
 var time = 0;
 var contentScene = new THREE.Scene();
@@ -28,15 +31,20 @@ var contentObject = new THREE.Mesh(
     color: 0xff00ff
   })
 );
-contentObject.position.z = -10;
+contentObject.position.z = -20;
 contentScene.add(contentObject);
+
+// create render target to render content into
 
 var contentRt = new THREE.WebGLRenderTarget(w, h, rtp);
 
-
+// create feedback renderer
 
 var feedbackRenderer = new FeedbackRenderer({
   renderer,
+  renderTargetParams: rtp,
+  width: w,
+  height: h,
   uniforms: {
     uSrcMap: {value: contentRt.texture},
     uTrailColor: {value: new THREE.Color(0x009fdf)},
@@ -61,7 +69,7 @@ var feedbackRenderer = new FeedbackRenderer({
   `
 });
 
-
+// create comp scene with two quads
 
 var size = 2;
 var compScene = new THREE.Scene();
@@ -78,7 +86,6 @@ var contentQuad = new THREE.Mesh(
 var trailQuad = new THREE.Mesh(
   new THREE.PlaneBufferGeometry(size, size),
   new THREE.MeshBasicMaterial({
-    // color: 0xff0000,
     transparent: true,
     map: feedbackRenderer.getTexture(),
   })
@@ -87,7 +94,7 @@ var trailQuad = new THREE.Mesh(
 compScene.add(trailQuad);
 compScene.add(contentQuad);
 
-
+// render
 
 function render() {
   time += 0.02;
@@ -111,11 +118,18 @@ function render() {
 
 requestAnimationFrame(render);
 
+// resize
+
 function resize() {
   var w = window.innerWidth;
   var h = window.innerHeight;
   
+  contentCamera.aspect = w / h;
+  contentCamera.updateProjectionMatrix();
+  
   renderer.setSize(w, h);
+  feedbackRenderer.setSize(w, h);
 }
-resize();
+
 window.addEventListener('resize', resize);
+resize();

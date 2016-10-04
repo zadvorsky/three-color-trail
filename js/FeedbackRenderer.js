@@ -1,17 +1,10 @@
 FeedbackRenderer = function(params) {
-  var rtp = {
-    minFilter: THREE.LinearFilter,
-    magFilter: THREE.LinearFilter,
-    format: THREE.RGBAFormat,
-    stencilBuffer: false
-  };
-  var w = window.innerWidth;
-  var h = window.innerHeight;
-  
-  this.rtSrc = new THREE.WebGLRenderTarget(w, h, rtp);
-  this.rtDst = new THREE.WebGLRenderTarget(w, h, rtp);
-  
+  var w = params.width || window.innerWidth;
+  var h = params.height || window.innerHeight;
   var size = 2;
+  
+  this.rtSrc = new THREE.WebGLRenderTarget(w, h, params.renderTargetParams);
+  this.rtDst = new THREE.WebGLRenderTarget(w, h, params.renderTargetParams);
   
   this.material = new THREE.ShaderMaterial({
     uniforms: Object.assign({}, params.uniforms, {
@@ -37,10 +30,13 @@ FeedbackRenderer = function(params) {
     this.material
   );
   this.scene.add(this.quad);
-  
 };
 
 FeedbackRenderer.prototype = {
+  setSize: function(w, h) {
+    this.rtSrc.setSize(w, h);
+    this.rtDst.setSize(w, h);
+  },
   getTexture: function() {
     return this.rtDst.texture;
   },
